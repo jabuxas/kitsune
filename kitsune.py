@@ -23,12 +23,26 @@ class Doujin:
     def __init__(self, url):
         self.id = url
         self.payload = asyncio.run(HTTP().main(url))
+        self.tags = Tag(self.payload).tags()
 
-    async def tags(self):
+
+class Tag:
+    def __init__(self, payload):
+        self.payload = payload
+        self.tag = self.tags()
+
+    def tags(self):
         l = []
         for itens in self.payload["tags"]:
             l.append(itens["name"])
         return l
 
+# unimplemented for now
+# class Title:
+#     def titles(self):
+#         for items in self.payload["title"]:
+#             print(items)
+
+
 doujin = Doujin(123654)
-asyncio.run(doujin.tags())
+print(doujin.tags)
