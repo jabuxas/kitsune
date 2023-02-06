@@ -21,28 +21,86 @@ class HTTP:
 
 class Doujin:
     def __init__(self, url):
-        self.id = url
-        self.payload = asyncio.run(HTTP().main(url))
-        self.tags = Tag(self.payload).tags()
+        self.__id = url
+        self.payload = asyncio.run(HTTP().main(self.__id))
 
+    def fetch_tags(self):
+        return Tag(self.payload).tags()
+
+    def fetch_cover(self):
+        return Cover(self.payload).fetch_cover()
+
+    def fetch_thumb(self):
+        return Thumb(self.payload).fetch_thumb()
+
+    def fetch_related(self):
+        return Related(self.__id).fetch_related()
 
 class Tag:
     def __init__(self, payload):
         self.payload = payload
-        self.tag = self.tags()
 
     def tags(self):
         l = []
-        for itens in self.payload["tags"]:
-            l.append(itens["name"])
+        for items in self.payload["tags"]:
+            l.append(items["name"])
         return l
 
-# unimplemented for now
-# class Title:
-#     def titles(self):
-#         for items in self.payload["title"]:
-#             print(items)
+
+class Cover:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def fetch_mid(self):
+        return self.payload["media_id"]
+
+    def fetch_exten(self):
+        type = self.payload["images"]["cover"]["t"]
+        return Conversion().convertor(type)
+
+    def fetch_cover(self):
+        media_id = self.fetch_mid()
+        extension = self.fetch_exten()
+        return f"https://t.nhentai.net/galleries/{media_id}/cover.{extension}"
+
+
+
+class Thumb:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def fetch_mid(self):
+        return self.payload["media_id"]
+
+    def fetch_exten(self):
+        type = self.payload["images"]["thumbnail"]["t"]
+        return Conversion().convertor(type)
+
+    def fetch_thumb(self):
+        media_id = self.fetch_mid()
+        extension = self.fetch_exten()
+        return f"https://t.nhentai.net/galleries/{media_id}/thumb.{extension}"
+
+
+class Conversion:
+    def convertor(self, payload):
+        if payload == "j":
+            return "jpg"
+        elif payload == "g":
+            return "gif"
+        else:
+            return "png"
+
+
+class Related:
+    def __init__(self, __id):
+        self.__id = __id
+
+    def fetch_related(self):
+        return f"https://nhentai.net/api/gallery/{self.__id}/related"
 
 
 doujin = Doujin(123654)
-print(doujin.tags)
+print(doujin.fetch_cover())
+print(doujin.fetch_thumb())
+print(doujin.fetch_related())
