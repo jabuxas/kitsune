@@ -157,9 +157,3 @@ class Page:
         for link in self.image_urls():
             count += 1
             wget.download(link, f"{location}/{self.fetch_mid()}/{count}.jpg")
-
-
-doujin = Doujin(123654)
-# print(doujin.fetch_thumb())
-print(doujin.download_pages("/home/jab/tmp/"))
-# print(doujin.fetch_related())
