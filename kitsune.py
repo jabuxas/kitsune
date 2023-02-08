@@ -1,24 +1,17 @@
 import ast
 import asyncio
-import wget
+import pathlib
+
 import aiohttp
-import os
-import sys
+import wget
 
 
-
-
-class Doujin:
-    def __init__(self, url):
-        self.__id = url
-        loop = asyncio.get_event_loop()
-        self.payload = loop.run_until_complete(asyncio.ensure_future(self.main(self.__id)))
-
+class HTTP:
     async def fetch(self, session, url):
         async with session.get(url) as response:
             return await response.text()
 
-    async def main(self, url):
+    async def jabuxas(self, url):
         async with aiohttp.ClientSession() as session:
             url = f"https://nhentai.net/api/gallery/{url}"
             uri = f"https://translate.google.com/translate?sl=vi&tl=en&hl=vi&u={url}&client=webapp"
@@ -26,23 +19,48 @@ class Doujin:
             html = ast.literal_eval(html)
             return html
 
+
+class Doujin:
+    def __init__(self, id):
+        self.__id = id
+        # asyncio.set_event_loop_policy(None)
+        loop = asyncio.get_event_loop()
+        self.payload = loop.run_until_complete(
+            asyncio.ensure_future(HTTP().jabuxas(self.__id))
+        )
+
+    @property
     def fetch_tags(self):
         return Tag(self.payload).tags()
 
+    @property
     def fetch_cover(self):
         return Cover(self.payload).fetch_cover()
 
+    @property
     def fetch_thumb(self):
         return Thumb(self.payload).fetch_thumb()
 
+    @property
     def fetch_related(self):
         return Related(self.__id).fetch_related()
 
+    @property
     def fetch_pages(self):
+        """
+        Returns the url's of the doujin's images.
+        """
         return Page(self.payload).image_urls()
 
-    def download_pages(self):
-        return Page(self.payload).download_url()
+    def download_pages(self, location):
+        """
+        Downloads the pages of a certain Doujin
+
+        Accepts 1 argument -> location
+        pass it as '/home/user/Documents'
+        """
+        return Page(self.payload).download_url(location)
+
 
 class Tag:
     def __init__(self, payload):
@@ -70,7 +88,6 @@ class Cover:
         media_id = self.fetch_mid()
         extension = self.fetch_exten()
         return f"https://t.nhentai.net/galleries/{media_id}/cover.{extension}"
-
 
 
 class Thumb:
@@ -107,6 +124,7 @@ class Related:
     def fetch_related(self):
         return f"https://nhentai.net/api/gallery/{self.__id}/related"
 
+
 class Page:
     def __init__(self, payload):
         self.payload = payload
@@ -116,7 +134,7 @@ class Page:
         return __len
 
     def type_doujin(self):
-        __type =  self.payload["images"]["pages"][0]["t"]
+        __type = self.payload["images"]["pages"][0]["t"]
         extension = Conversion().convertor(__type)
         return extension
 
@@ -130,25 +148,18 @@ class Page:
             image = f"https://i.nhentai.net/galleries/{self.fetch_mid()}/{num}.{self.type_doujin()}"
             l.append(image)
         return l
-    
-    def download_url(self):
+
+    def download_url(self, location):
         count = 0
-        cur_wd = os.getcwd()
+        if location[-1] == "/":
+            location = location.rstrip("/")
+        pathlib.Path(f"{location}/{self.fetch_mid()}").mkdir()
         for link in self.image_urls():
-            count +=1
-            #wget.download(link, f'/home/jab/tmp/{self.fetch_mid()}-{count}.jpg')
-            wget.download(link , f'{cur_wd}/tmp/{self.fetch_mid()}-{count.zfill(3)}.jpg')
-            #I added it so it will add them to the working direcotry. 
+            count += 1
+            wget.download(link, f"{location}/{self.fetch_mid()}/{count}.jpg")
 
 
-#doujin = Doujin(123654)
-input_doujin = sys.argv[1]
-if input_doujin and int(input_doujin) > 0:
-    doujin = Doujin(input_doujin)
-else:
-    print("Please enter a manga numbers from nhentia")
-print(doujin.download_pages())
-# Add the above to accept an input and check for it it is not empty
-
+doujin = Doujin(123654)
 # print(doujin.fetch_thumb())
+print(doujin.download_pages("/home/jab/tmp/"))
 # print(doujin.fetch_related())
