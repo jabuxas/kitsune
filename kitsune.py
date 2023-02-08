@@ -2,6 +2,8 @@ import ast
 import asyncio
 import wget
 import aiohttp
+import os
+import sys
 
 
 
@@ -131,12 +133,22 @@ class Page:
     
     def download_url(self):
         count = 0
+        cur_wd = os.getcwd()
         for link in self.image_urls():
             count +=1
-            wget.download(link, f'/home/jab/tmp/{self.fetch_mid()}-{count}.jpg')
+            #wget.download(link, f'/home/jab/tmp/{self.fetch_mid()}-{count}.jpg')
+            wget.download(link , f'{cur_wd}/tmp/{self.fetch_mid()}-{count.zfill(3)}.jpg')
+            #I added it so it will add them to the working direcotry. 
 
 
-doujin = Doujin(123654)
+#doujin = Doujin(123654)
+input_doujin = sys.argv[1]
+if input_doujin and int(input_doujin) > 0:
+    doujin = Doujin(input_doujin)
+else:
+    print("Please enter a manga numbers from nhentia")
 print(doujin.download_pages())
+# Add the above to accept an input and check for it it is not empty
+
 # print(doujin.fetch_thumb())
 # print(doujin.fetch_related())
