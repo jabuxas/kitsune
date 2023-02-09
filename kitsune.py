@@ -1,7 +1,7 @@
 import ast
 import asyncio
 import pathlib
-import os
+
 import aiohttp
 import wget
 
@@ -128,15 +128,14 @@ class Related:
 class Page:
     def __init__(self, payload):
         self.payload = payload
-        print(payload)
 
     def len_doujin(self):
         __len = len(self.payload["images"]["pages"])
         return __len
-    def fetch_name(self):
-        doujin_name = self.payload["title"]["english"]
-        return(doujin_name)
 
+    def fetch_name(self):
+        doujin_name = self.payload["title"]["pretty"]
+        return doujin_name
 
     def type_doujin(self):
         __type = self.payload["images"]["pages"][0]["t"]
@@ -144,7 +143,8 @@ class Page:
         return extension
 
     def fetch_mid(self):
-        return self.payload["media_id"]
+        media_id = self.payload["media_id"]
+        return media_id
 
     def image_urls(self):
         l = []
@@ -156,17 +156,17 @@ class Page:
 
     def download_url(self, location):
         count = 0
-#        if location[-1] == "/":
-#            location = location.rstrip("/")
         # The below just checks if the folders exists
-        if not os.path.exists(f"{location}/{self.fetch_name()}"):
-#            pathlib.Path(f"{location}/{self.fetch_mid()}").mkdir()
-            if not os.path.exists(location):
-                os.mkdir(location)
-            os.mkdir(f"{location}/{self.fetch_name()}")
-
+        if location[-1] == "/":
+            location = location.rstrip("/")
+        p = pathlib.Path(f"{location}/{self.fetch_name()}")
+        if not p.exists():
+            p.mkdir()
+        location = f"{location}/{self.fetch_name()}"
         for link in self.image_urls():
             count += 1
-            #below checks if the files exists
-            if not os.path.isfile(f"{location}/{self.fetch_name()}/{str(count).zfill(4)}.jpg"):
-                wget.download(link, f"{location}/{self.fetch_name()}/{str(count).zfill(4)}.jpg")
+            # below checks if the files exists
+            if not pathlib.Path(
+                f"{location}/{str(count).zfill(4)}{link[-3:]}"
+            ).exists():
+                wget.download(link, f"{location}/{str(count).zfill(4)}.{link[-3:]}")
