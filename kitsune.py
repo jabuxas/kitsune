@@ -1,7 +1,7 @@
 import ast
 import asyncio
 import pathlib
-
+import os
 import aiohttp
 import wget
 
@@ -128,10 +128,15 @@ class Related:
 class Page:
     def __init__(self, payload):
         self.payload = payload
+        print(payload)
 
     def len_doujin(self):
         __len = len(self.payload["images"]["pages"])
         return __len
+    def fetch_name(self):
+        doujin_name = self.payload["title"]["english"]
+        return(doujin_name)
+
 
     def type_doujin(self):
         __type = self.payload["images"]["pages"][0]["t"]
@@ -151,9 +156,17 @@ class Page:
 
     def download_url(self, location):
         count = 0
-        if location[-1] == "/":
-            location = location.rstrip("/")
-        pathlib.Path(f"{location}/{self.fetch_mid()}").mkdir()
+#        if location[-1] == "/":
+#            location = location.rstrip("/")
+        # The below just checks if the folders exists
+        if not os.path.exists(f"{location}/{self.fetch_name()}"):
+#            pathlib.Path(f"{location}/{self.fetch_mid()}").mkdir()
+            if not os.path.exists(location):
+                os.mkdir(location)
+            os.mkdir(f"{location}/{self.fetch_name()}")
+
         for link in self.image_urls():
             count += 1
-            wget.download(link, f"{location}/{self.fetch_mid()}/{count}.jpg")
+            #below checks if the files exists
+            if not os.path.isfile(f"{location}/{self.fetch_name()}/{str(count).zfill(4)}.jpg"):
+                wget.download(link, f"{location}/{self.fetch_name()}/{str(count).zfill(4)}.jpg")
