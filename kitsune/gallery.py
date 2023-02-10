@@ -37,7 +37,7 @@ class Gallery:
                 i + 1,
                 self.EXTENSIONS[self.payload["images"]["pages"][i]["t"]],
             )
-            url = page.create()
+            url = page.url()
             pages.append((page, url))
         return pages
 
@@ -53,7 +53,7 @@ class Gallery:
             self.payload["images"]["cover"]["w"],
             self.payload["images"]["cover"]["h"],
         )
-        url = cover.create()
+        url = cover.url()
         return (cover, url)
 
     @property
@@ -68,7 +68,7 @@ class Gallery:
             self.payload["images"]["thumbnail"]["w"],
             self.payload["images"]["thumbnail"]["h"],
         )
-        url = thumbnail.create()
+        url = thumbnail.url()
         return (thumbnail, url)
 
     @property
@@ -122,7 +122,7 @@ class Cover:
     width: int
     height: int
 
-    def create(self):
+    def url(self):
         return f"https://t.nhentai.net/galleries/{self.media_id}/cover.{self.type}"
 
 
@@ -133,7 +133,7 @@ class Thumb:
     width: int
     height: int
 
-    def create(self):
+    def url(self):
         return f"https://t.nhentai.net/galleries/{self.media_id}/thumb.{self.type}"
 
 
@@ -143,5 +143,5 @@ class Page:
     num: int
     type: str
 
-    def create(self):
+    def url(self):
         return f"https://i.nhentai.net/galleries/{self.media_id}/{self.num}.{self.type}"
