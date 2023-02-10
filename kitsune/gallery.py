@@ -41,11 +41,6 @@ class Gallery:
     def fetch_name_pretty(self):
         doujin_name = self.payload["title"]["pretty"]
         return doujin_name
-
-    def type_doujin(self):
-        __type = self.payload["images"]["pages"][0]["t"]
-        extension = self.EXTENSIONS[__type]
-        return extension
     
     def doujin_type(self,loc):
         __type = self.payload["images"]["pages"][loc]["t"]
@@ -60,10 +55,7 @@ class Gallery:
         for num in range(self.len_doujin()):
             extension = self.doujin_type(num)
             num += 1
-            if extension == "jpg":
-                image = f"https://i.nhentai.net/galleries/{self.media_id()}/{num}.{self.type_doujin()}"
-            elif extension == "png":
-                image = f"https://i3.nhentai.net/galleries/{self.media_id()}/{num}.png"
+            image = f"https://i.nhentai.net/galleries/{self.media_id()}/{num}.{extension}"
             l.append(image)
         return l
 
