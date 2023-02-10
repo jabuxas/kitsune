@@ -57,3 +57,15 @@ class Doujin:
         pass it as '/home/user/Documents'
         """
         return Gallery(self.payload).download_url(location)
+
+    @property
+    def help(self):
+        return("""
+        fetch_tags
+        t_english 
+        t_pretty
+        t_japanese
+        fetch_thumb
+        fetch_related
+        fetch_pages
+        download_pages""")
