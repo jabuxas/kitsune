@@ -39,8 +39,6 @@ class Doujin:
         tasks = [self.fetch_gallery(__id) for __id in ids]
         return await asyncio.gather(*tasks)
 
-
-
     async def download(self, location: str, __id: Union[str, int]):
         """
         Download the doujin pages to the specified location.

@@ -1,6 +1,7 @@
 import ast
 import asyncio
 from typing import Union
+
 import aiohttp
 
 
@@ -21,7 +22,7 @@ class HTTP:
         html = ast.literal_eval(html)
         return html
 
-    async def main(self,urls: Union[str, list],  session=None) -> Union[dict, list]:
+    async def main(self, urls: Union[str, list], session=None) -> Union[dict, list]:
         if session is None:
             session = aiohttp.ClientSession()
 
