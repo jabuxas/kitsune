@@ -1,9 +1,10 @@
 import asyncio
 import pathlib
-from typing import Dict, List
+from typing import Dict
+from typing import List
 
+import aiofiles
 import aiohttp
-import wget
 
 from kitsune.gallery import Gallery
 from kitsune.httphandler import HTTP
@@ -15,9 +16,14 @@ class Doujin:
     def __init__(self):
         self.cache: Dict[int, Gallery] = {}
 
-    async def fetch_gallery(
-        self, __id: int, session=None, close: bool = True
-    ) -> Gallery:
+    async def __aenter__(self):
+        self.session = aiohttp.ClientSession()
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.session.close()
+
+    async def fetch_gallery(self, __id: int, session=None) -> Gallery:
         """
         Standard fetching of the gallery, it receives as argument
         an integer, and returns a gallery object
@@ -27,30 +33,25 @@ class Doujin:
             return gallery
 
         if session is None:
-            session = aiohttp.ClientSession()
+            session = self.session
 
         # fetch payload
-        payload = await HTTP().main(__id, session)
+        payload = await HTTP().html(session, __id)
         gallery = Gallery(payload)
         # add payload to cache
         self.cache[gallery.id] = gallery
 
-        # if calling this function without special paratemers, remember to
-        # close at the end of it
-        if close:
-            await session.close()
-
         return gallery
 
-    async def fetch_galleries(self, ids: list) -> List[Gallery]:
+    async def fetch_galleries(self, ids: list):
         """
         Receives a list of doujin's id's as argument,
         returns a list with the gallery objects of those id's
         """
-        session = aiohttp.ClientSession()
-        tasks = [self.fetch_gallery(__id, session, close=False) for __id in ids]
+        session = self.session
+        tasks = (self.fetch_gallery(__id, session) for __id in ids)
         results = await asyncio.gather(*tasks)
-        await session.close()
+        # return await asyncio.gather(*(self.fetch_gallery(__id, session) for __id in ids))
         return results
 
     async def fetch_related(self, __id: int) -> List[Gallery]:
@@ -58,15 +59,14 @@ class Doujin:
         Parses all related doujin to the id specified,
         returning a list with the objects of each
         """
-        session = aiohttp.ClientSession()
+        session = self.session
         url = f"{__id}/related"
-        payload = await HTTP().main(url, session)
+        payload = await HTTP().html(session, url)
         gallery = [Gallery(result) for result in payload["result"]]
 
         for doujin in gallery:
             self.cache[doujin.id] = doujin
 
-        await session.close()
         return gallery
 
     async def download(self, location: str, __id: int):
@@ -85,6 +85,7 @@ class Doujin:
             pathlib.Path(location).mkdir()
         # await payload
         links = await self.fetch_gallery(__id)
+        session = self.session
         for link in links.pages:
             # link is a tuple with metadata and url
             link = link[1]
@@ -94,4 +95,7 @@ class Doujin:
             if pathlib.Path(filename).exists():
                 print(f"File {filename} already exists, skipping download.")
                 continue
-            wget.download(link, f"{location}/{str(count).zfill(4)}.{link[-3:]}")
+            fetch = await HTTP().fetch(session, link, json=False)
+            await asyncio.sleep(0.5)
+            async with aiofiles.open(f"{filename}", mode="wb") as f:
+                await f.write(fetch)
