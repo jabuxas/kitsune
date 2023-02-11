@@ -1,12 +1,11 @@
 import ast
-import asyncio
 from typing import Union
 
 import aiohttp
 
 
 class HTTP:
-    async def fetch(self, session: aiohttp.ClientSession, url: Union[str, int]) -> str:
+    async def fetch(self, session: aiohttp.ClientSession, url: str) -> str:
         # does the get requests
         async with session.get(url) as response:
             return await response.text()
@@ -22,16 +21,6 @@ class HTTP:
         html = ast.literal_eval(html)
         return html
 
-    async def main(self, urls: Union[str, list], session=None) -> Union[dict, list]:
-        if session is None:
-            session = aiohttp.ClientSession()
-
-        if isinstance(urls, list):
-            tasks = [self.html(session, url) for url in urls]
-            results = await asyncio.gather(*tasks)
-        else:
-            results = await self.html(session, urls)
-
-        await session.close()
-
+    async def main(self, url: Union[str, int], session) -> Union[dict, list]:
+        results = await self.html(session, url)
         return results

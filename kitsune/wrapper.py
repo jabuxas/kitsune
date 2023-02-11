@@ -1,7 +1,8 @@
 import asyncio
 import pathlib
-from typing import Dict, Union
+from typing import Dict
 
+import aiohttp
 import wget
 
 from kitsune.gallery import Gallery
@@ -14,7 +15,9 @@ class Doujin:
     def __init__(self):
         self.cache: Dict[int, Gallery] = {}
 
-    async def fetch_gallery(self, __id: Union[int, str]) -> Gallery:
+    async def fetch_gallery(
+        self, __id: int, session=None, close: bool = True
+    ) -> Gallery:
         """
         Standard fetching of the gallery, it receives as argument
         an integer or a string, and returns a gallery object
@@ -23,11 +26,19 @@ class Doujin:
         if gallery := self.cache.get(__id):
             return gallery
 
+        if session is None:
+            session = aiohttp.ClientSession()
+
         # fetch payload
-        payload = await HTTP().main(__id)
+        payload = await HTTP().main(__id, session)
         gallery = Gallery(payload)
         # add payload to cache
         self.cache[gallery.id] = gallery
+
+        # if calling this function without special paratemers, remember to
+        # close at the end of it
+        if close:
+            await session.close()
 
         return gallery
 
@@ -36,17 +47,20 @@ class Doujin:
         Receives a list of doujin's id's as argument,
         returns a list with the gallery objects of those id's
         """
-        tasks = [self.fetch_gallery(__id) for __id in ids]
-        return await asyncio.gather(*tasks)
+        session = aiohttp.ClientSession()
+        tasks = [self.fetch_gallery(__id, session, close=False) for __id in ids]
+        results = await asyncio.gather(*tasks)
+        await session.close()
+        return results
 
-    async def download(self, location: str, __id: Union[str, int]):
+    async def download(self, location: str, __id: int):
         """
         Download the doujin pages to the specified location.
         Accepts the absolute path as location. e.g:
             '/home/user/tmp'
         without trailing slashes.
 
-        Accepts an int id as the __id.
+        Accepts an int or str id as the __id.
         """
         count = 0
         location = f"{location}/{__id}"
