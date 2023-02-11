@@ -1,6 +1,6 @@
 import asyncio
 import pathlib
-from typing import Dict
+from typing import Dict, Union
 
 import wget
 
@@ -11,33 +11,52 @@ __all__ = ("Doujin",)
 
 
 class Doujin:
-    loop = asyncio.get_event_loop()
-
-    def __init__(self, id):
-        self.__id = id
+    def __init__(self):
         self.cache: Dict[int, Gallery] = {}
 
-    async def fetch_gallery_data(self):
+    async def fetch_gallery(self, __id: Union[int, str]) -> Gallery:
+        """
+        Standard fetching of the gallery, it receives as argument
+        an integer or a string, and returns a gallery object
+        """
         # if gallery is in cache, use that
-        if gallery := self.cache.get(self.__id):
+        if gallery := self.cache.get(__id):
             return gallery
 
         # fetch payload
-        payload = await HTTP().jabuxas(self.__id)
+        payload = await HTTP().main(__id)
         gallery = Gallery(payload)
         # add payload to cache
         self.cache[gallery.id] = gallery
 
         return gallery
 
-    async def download(self, location):
+    async def fetch_galleries(self, ids: list) -> list:
+        """
+        Receives a list of doujin's id's as argument,
+        returns a list with the gallery objects of those id's
+        """
+        tasks = [self.fetch_gallery(__id) for __id in ids]
+        return await asyncio.gather(*tasks)
+
+
+
+    async def download(self, location: str, __id: Union[str, int]):
+        """
+        Download the doujin pages to the specified location.
+        Accepts the absolute path as location. e.g:
+            '/home/user/tmp'
+        without trailing slashes.
+
+        Accepts an int id as the __id.
+        """
         count = 0
-        location = f"{location}/{self.__id}"
+        location = f"{location}/{__id}"
         # The below just checks if the folders exists
         if not pathlib.Path(location).exists():
             pathlib.Path(location).mkdir()
         # await payload
-        links = await self.fetch_gallery_data()
+        links = await self.fetch_gallery(__id)
         for link in links.pages:
             # link is a tuple with metadata and url
             link = link[1]
