@@ -1,6 +1,6 @@
 import asyncio
 import pathlib
-from typing import Dict
+from typing import Dict, List
 
 import aiohttp
 import wget
@@ -20,7 +20,7 @@ class Doujin:
     ) -> Gallery:
         """
         Standard fetching of the gallery, it receives as argument
-        an integer or a string, and returns a gallery object
+        an integer, and returns a gallery object
         """
         # if gallery is in cache, use that
         if gallery := self.cache.get(__id):
@@ -42,7 +42,7 @@ class Doujin:
 
         return gallery
 
-    async def fetch_galleries(self, ids: list) -> list:
+    async def fetch_galleries(self, ids: list) -> List[Gallery]:
         """
         Receives a list of doujin's id's as argument,
         returns a list with the gallery objects of those id's
@@ -53,6 +53,22 @@ class Doujin:
         await session.close()
         return results
 
+    async def fetch_related(self, __id: int) -> List[Gallery]:
+        """
+        Parses all related doujin to the id specified,
+        returning a list with the objects of each
+        """
+        session = aiohttp.ClientSession()
+        url = f"{__id}/related"
+        payload = await HTTP().main(url, session)
+        gallery = [Gallery(result) for result in payload["result"]]
+
+        for doujin in gallery:
+            self.cache[doujin.id] = doujin
+
+        await session.close()
+        return gallery
+
     async def download(self, location: str, __id: int):
         """
         Download the doujin pages to the specified location.
@@ -60,7 +76,7 @@ class Doujin:
             '/home/user/tmp'
         without trailing slashes.
 
-        Accepts an int or str id as the __id.
+        Accepts an int id as the __id.
         """
         count = 0
         location = f"{location}/{__id}"

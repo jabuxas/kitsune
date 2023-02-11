@@ -7,6 +7,9 @@ class Gallery:
     def __init__(self, payload):
         self.payload = payload
 
+    def __getitem__(self, key):
+        return getattr(self, key)
+
     @property
     def tags(self) -> list:
         """
@@ -77,12 +80,6 @@ class Gallery:
         Returns the media_id of the doujin
         """
         return self.payload["media_id"]
-
-    def fetch_related(self):
-        """
-        Unimplemented for now.
-        """
-        return f"https://nhentai.net/api/gallery/{self.id}/related"
 
     @property
     def num_pages(self) -> int:
