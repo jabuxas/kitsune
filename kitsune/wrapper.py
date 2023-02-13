@@ -62,12 +62,12 @@ class Doujin:
         session = self.session
         url = f"{__id}/related"
         payload = await HTTP().html(session, url)
-        gallery = [Gallery(result) for result in payload["result"]]
+        galleries = [Gallery(result) for result in payload["result"]]
 
-        for doujin in gallery:
+        for doujin in galleries:
             self.cache[doujin.id] = doujin
 
-        return gallery
+        return galleries
 
     async def download(self, location: str, __id: int):
         """

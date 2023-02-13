@@ -27,6 +27,9 @@ class Tag:
 
 @dataclass(frozen=True, slots=True)
 class Page:
+    def __getitem__(self, key):
+        return getattr(self, key)
+
     media_id: int
     num: int
     type: str
@@ -95,8 +98,9 @@ class Gallery:
                 self.EXTENSIONS[entry["t"]],
                 (entry["w"], entry["h"]),
             )
+            tup = (page, page.url)
 
-            pages.append(page)
+            pages.append(tup)
 
         return pages
 

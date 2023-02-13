@@ -1,9 +1,13 @@
-from typing import Union, Optional
+from typing import Optional
+from typing import Union
 
 import aiohttp
 
+
 class HTTP:
-    async def fetch(self, session: aiohttp.ClientSession, url: str, json: Optional[bool] = True):
+    async def fetch(
+        self, session: aiohttp.ClientSession, url: str, json: Optional[bool] = True
+    ):
         # does the get requests
         async with session.get(url) as response:
             if json:
