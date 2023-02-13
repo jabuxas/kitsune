@@ -3,7 +3,7 @@ from typing import Union, Optional
 import aiohttp
 
 class HTTP:
-    async def fetch(self, session: aiohttp.ClientSession, url: str, json: Optional[bool] = None):
+    async def fetch(self, session: aiohttp.ClientSession, url: str, json: Optional[bool] = True):
         # does the get requests
         async with session.get(url) as response:
             if json:
