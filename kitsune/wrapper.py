@@ -1,9 +1,9 @@
 import asyncio
 import pathlib
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
 from typing import List
 
-import aiofiles
 import aiohttp
 
 from kitsune.gallery import Gallery
@@ -13,11 +13,16 @@ __all__ = ("Doujin",)
 
 
 class Doujin:
-    def __init__(self):
+    def __init__(
+        self,
+        session=None,
+        loop=None,
+    ):
         self.cache: Dict[int, Gallery] = {}
+        self.loop = loop or asyncio.get_event_loop()
+        self.session = session or aiohttp.ClientSession(loop=self.loop)
 
     async def __aenter__(self):
-        self.session = aiohttp.ClientSession()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
@@ -51,7 +56,6 @@ class Doujin:
         session = self.session
         tasks = (self.fetch_gallery(__id, session) for __id in ids)
         results = await asyncio.gather(*tasks)
-        # return await asyncio.gather(*(self.fetch_gallery(__id, session) for __id in ids))
         return results
 
     async def fetch_related(self, __id: int) -> List[Gallery]:
@@ -86,16 +90,20 @@ class Doujin:
         # await payload
         links = await self.fetch_gallery(__id)
         session = self.session
-        for link in links.pages:
-            # link is a tuple with metadata and url
-            link = link[1]
-            count += 1
-            # below checks if the files exists
-            filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
-            if pathlib.Path(filename).exists():
-                print(f"File {filename} already exists, skipping download.")
-                continue
-            fetch = await HTTP().fetch(session, link, json=False)
-            await asyncio.sleep(0.5)
-            async with aiofiles.open(f"{filename}", mode="wb") as f:
-                await f.write(fetch)
+        with ThreadPoolExecutor() as executor:
+            for link in links.pages:
+                # link is a tuple with metadata and url
+                link = link[1]
+                count += 1
+                # below checks if the files exists
+                filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
+                if pathlib.Path(filename).exists():
+                    print(f"File {filename} already exists, skipping download.")
+                    continue
+                image = await HTTP().fetch(session, link, json=False)
+                executor.submit(self.write_file, location, count, link, image)
+
+    def write_file(self, location: str, count: int, link: str, image: bytes) -> None:
+        filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
+        with open(f"{filename}", mode="wb") as f:
+            f.write(image)
