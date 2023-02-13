@@ -7,7 +7,7 @@ import aiofiles
 import aiohttp
 
 from kitsune.gallery import Gallery
-from kitsune.httphandler import HTTP
+from kitsune.http import HTTP
 
 __all__ = ("Doujin",)
 

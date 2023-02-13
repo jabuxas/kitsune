@@ -1,10 +1,9 @@
-from typing import Union
+from typing import Union, Optional
 
 import aiohttp
 
-
 class HTTP:
-    async def fetch(self, session: aiohttp.ClientSession, url: str, json: bool = True):
+    async def fetch(self, session: aiohttp.ClientSession, url: str, json: Optional[bool] = None):
         # does the get requests
         async with session.get(url) as response:
             if json:
@@ -12,7 +11,7 @@ class HTTP:
             else:
                 return await response.read()
 
-    async def html(self, session: aiohttp.ClientSession, url: Union[str, int]) -> dict:
+    async def html(self, session: aiohttp.ClientSession, url: Union[int, str]) -> dict:
         # formats the urls for the get requests
         url = f"https://nhentai.net/api/gallery/{url}"
         # cloudflare skip any% speedrun
