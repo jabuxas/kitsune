@@ -1,17 +1,15 @@
 import asyncio
 import pathlib
+import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
 from datetime import timezone
-from typing import Dict
-from typing import List
+from typing import Dict, List
 
 import aiohttp
 from tqdm import tqdm
 
-from kitsune.gallery import Comment
-from kitsune.gallery import Gallery
-from kitsune.gallery import User
+from kitsune.gallery import Comment, Gallery, User
 from kitsune.http import HTTP
 
 __all__ = ("Doujin",)
@@ -128,3 +126,12 @@ class Doujin:
             c["body"],
         )
         return [comment(data) for data in payload]
+
+    async def search(self, params: dict):
+        session = self.session
+        base_url = "https://nhentai.net/api/galleries/search"
+        url = f"{base_url}?{urllib.parse.urlencode(params)}"
+        uri = f"https://translate.google.com/translate?sl=vi&tl=en&hl=vi&u={url}&client=webapp"
+        payload = await HTTP().fetch(session, uri)
+        payload = payload["result"]
+        return [Gallery(data) for data in payload]

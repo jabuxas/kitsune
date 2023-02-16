@@ -1,5 +1,4 @@
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 import aiohttp
 
@@ -15,7 +14,9 @@ class HTTP:
             else:
                 return await response.read()
 
-    async def html(self, session: aiohttp.ClientSession, url: Union[int, str]) -> dict:
+    async def gallery(
+        self, session: aiohttp.ClientSession, url: Union[int, str]
+    ) -> dict:
         # formats the urls for the get requests
         url = f"https://nhentai.net/api/gallery/{url}"
         # cloudflare skip any% speedrun
@@ -27,4 +28,3 @@ class HTTP:
         filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
         with open(f"{filename}", mode="wb") as f:
             f.write(image)
-
