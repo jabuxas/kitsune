@@ -20,11 +20,6 @@ class User:
     is_superuser: bool
     is_staff: bool
 
-    @property
-    def url(self):
-        return f"https://nhentai.net/{self.id}/{self.slug}"
-
-
 @dataclass(frozen=True, slots=True)
 class Comment:
     id: int
