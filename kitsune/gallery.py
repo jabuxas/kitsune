@@ -20,6 +20,7 @@ class User:
     is_superuser: bool
     is_staff: bool
 
+
 @dataclass(frozen=True, slots=True)
 class Comment:
     id: int
@@ -191,3 +192,11 @@ class Gallery:
         """
 
         return dt.fromtimestamp(self.payload["upload_date"], tz=timezone.utc)
+
+    @property
+    def num_favorites(self) -> int:
+        """
+        Returns the numbers of favorites a doujin has
+        """
+
+        return self.payload["num_favorites"]
