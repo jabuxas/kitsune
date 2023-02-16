@@ -1,12 +1,17 @@
 import asyncio
 import pathlib
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime as dt
+from datetime import timezone
 from typing import Dict
 from typing import List
 
 import aiohttp
+from tqdm import tqdm
 
+from kitsune.gallery import Comment
 from kitsune.gallery import Gallery
+from kitsune.gallery import User
 from kitsune.http import HTTP
 
 __all__ = ("Doujin",)
@@ -91,7 +96,7 @@ class Doujin:
         links = await self.fetch_gallery(__id)
         session = self.session
         with ThreadPoolExecutor() as executor:
-            for link in links.pages:
+            for link in tqdm(links.pages, desc="Downloading:", ascii=True):
                 # link is a tuple with metadata and url
                 link = link[1]
                 count += 1
@@ -101,9 +106,25 @@ class Doujin:
                     print(f"File {filename} already exists, skipping download.")
                     continue
                 image = await HTTP().fetch(session, link, json=False)
-                executor.submit(self.write_file, location, count, link, image)
+                executor.submit(HTTP().write_file, location, count, link, image)
 
-    def write_file(self, location: str, count: int, link: str, image: bytes) -> None:
-        filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
-        with open(f"{filename}", mode="wb") as f:
-            f.write(image)
+    async def comments(self, __id) -> list[Comment]:
+        session = self.session
+        url = f"{__id}/comments"
+        payload = await HTTP().html(session, url)
+        user = lambda j: User(
+            j["id"],
+            j["username"],
+            j["slug"],
+            f'https://i.nhentai.net/{j["avatar_url"]}',
+            j["is_superuser"],
+            j["is_staff"],
+        )
+        comment = lambda c: Comment(
+            c["id"],
+            c["gallery_id"],
+            user(c["poster"]),
+            dt.fromtimestamp(c["post_date"], tz=timezone.utc),
+            c["body"],
+        )
+        return [comment(data) for data in payload]

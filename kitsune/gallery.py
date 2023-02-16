@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime as dt
+from datetime import timezone
 
 __all__ = (
     "Title",
@@ -7,6 +9,29 @@ __all__ = (
     "Cover",
     "Thumb" "Gallery",
 )
+
+
+@dataclass(frozen=True, slots=True)
+class User:
+    id: int
+    username: str
+    slug: str
+    avatar_url: str
+    is_superuser: bool
+    is_staff: bool
+
+    @property
+    def url(self):
+        return f"https://nhentai.net/{self.id}/{self.slug}"
+
+
+@dataclass(frozen=True, slots=True)
+class Comment:
+    id: int
+    gallery_id: int
+    poster: User
+    post_date: dt
+    body: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,19 +61,19 @@ class Page:
     resolution: tuple[int, int]
 
     @property
-    def url(self):
+    def url(self) -> str:
         return f"https://i.nhentai.net/galleries/{self.media_id}/{self.num}.{self.type}"
 
 
 class Cover(Page):
     @property
-    def url(self):
+    def url(self) -> str:
         return f"https://t.nhentai.net/galleries/{self.media_id}/cover.{self.type}"
 
 
 class Thumb(Page):
     @property
-    def url(self):
+    def url(self) -> str:
         return f"https://t.nhentai.net/galleries/{self.media_id}/thumb.{self.type}"
 
 
@@ -160,6 +185,14 @@ class Gallery:
     def id(self) -> int:
         """
         Well, returns the id that was entered
-
         """
+
         return self.payload["id"]
+
+    @property
+    def upload_date(self) -> dt:
+        """
+        Returns the upload date of a doujin
+        """
+
+        return dt.fromtimestamp(self.payload["upload_date"], tz=timezone.utc)

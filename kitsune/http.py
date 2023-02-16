@@ -22,3 +22,9 @@ class HTTP:
         uri = f"https://translate.google.com/translate?sl=vi&tl=en&hl=vi&u={url}&client=webapp"
         # get request
         return await self.fetch(session, uri)
+
+    def write_file(self, location: str, count: int, link: str, image: bytes) -> None:
+        filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
+        with open(f"{filename}", mode="wb") as f:
+            f.write(image)
+
