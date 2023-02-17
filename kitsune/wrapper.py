@@ -117,7 +117,7 @@ class Doujin:
         session = self.session
         url = f"{__id}/comments"
         payload = await HTTP().gallery(session, url)
-        comments = [
+        return [
             Comment(
                 data["id"],
                 data["gallery_id"],
@@ -134,7 +134,6 @@ class Doujin:
             )
             for data in payload
         ]
-        return comments
 
     async def search_query(
         self, query: str, page: int = 1, sort: str = "popular"
