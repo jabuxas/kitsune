@@ -44,14 +44,14 @@ class Doujin:
             session = self.session
 
         # fetch payload
-        payload = await HTTP().html(session, __id)
+        payload = await HTTP().gallery(session, __id)
         gallery = Gallery(payload)
         # add payload to cache
         self.cache[gallery.id] = gallery
 
         return gallery
 
-    async def fetch_galleries(self, ids: list):
+    async def fetch_galleries(self, ids: list) -> list[Gallery]:
         """
         Receives a list of doujin's id's as argument,
         returns a list with the gallery objects of those id's
@@ -68,7 +68,7 @@ class Doujin:
         """
         session = self.session
         url = f"{__id}/related"
-        payload = await HTTP().html(session, url)
+        payload = await HTTP().gallery(session, url)
         galleries = [Gallery(result) for result in payload["result"]]
 
         for doujin in galleries:
@@ -94,7 +94,7 @@ class Doujin:
         links = await self.fetch_gallery(__id)
         session = self.session
         with ThreadPoolExecutor() as executor:
-            for link in tqdm(links.pages, desc="Downloading:", ascii=True):
+            for link in tqdm(links.pages, desc="Downloading", ascii=True):
                 # link is a tuple with metadata and url
                 link = link[1]
                 count += 1
@@ -107,9 +107,13 @@ class Doujin:
                 executor.submit(HTTP().write_file, location, count, link, image)
 
     async def comments(self, __id) -> list[Comment]:
+        """
+        Retrieves the comments from a Doujin and their
+        metadata, such as their id, user picture url, etc.
+        """
         session = self.session
         url = f"{__id}/comments"
-        payload = await HTTP().html(session, url)
+        payload = await HTTP().gallery(session, url)
         user = lambda j: User(
             j["id"],
             j["username"],
@@ -127,11 +131,23 @@ class Doujin:
         )
         return [comment(data) for data in payload]
 
-    async def search(self, params: dict):
+    async def search_query(self, params: dict) -> list[Gallery]:
+        """
+        Searches by query, accepts payload in the following params:
+
+            param = {"query": "tag: demon_girl", "page": 1, "sort": "popular"}
+        """
         session = self.session
-        base_url = "https://nhentai.net/api/galleries/search"
+        base_url = f"api/galleries/search"
         url = f"{base_url}?{urllib.parse.urlencode(params)}"
-        uri = f"https://translate.google.com/translate?sl=vi&tl=en&hl=vi&u={url}&client=webapp"
-        payload = await HTTP().fetch(session, uri)
+        payload = await HTTP().google(session, url)
+        payload = payload["result"]
+        return [Gallery(data) for data in payload]
+
+    async def search_tags(self, params: dict) -> list[Gallery]:
+        session = self.session
+        base_url = f"api/galleries/tagged"
+        url = f"{base_url}?{urllib.parse.urlencode(params)}"
+        payload = await HTTP().google(session, url)
         payload = payload["result"]
         return [Gallery(data) for data in payload]
