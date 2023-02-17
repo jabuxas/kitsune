@@ -117,22 +117,24 @@ class Doujin:
         session = self.session
         url = f"{__id}/comments"
         payload = await HTTP().gallery(session, url)
-        user = lambda j: User(
-            j["id"],
-            j["username"],
-            j["slug"],
-            f'https://i.nhentai.net/{j["avatar_url"]}',
-            j["is_superuser"],
-            j["is_staff"],
-        )
-        comment = lambda c: Comment(
-            c["id"],
-            c["gallery_id"],
-            user(c["poster"]),
-            dt.fromtimestamp(c["post_date"], tz=timezone.utc),
-            c["body"],
-        )
-        return [comment(data) for data in payload]
+        comments = [
+            Comment(
+                data["id"],
+                data["gallery_id"],
+                User(
+                    data["poster"]["id"],
+                    data["poster"]["username"],
+                    data["poster"]["slug"],
+                    f'https://i.nhentai.net/{data["poster"]["avatar_url"]}',
+                    data["poster"]["is_superuser"],
+                    data["poster"]["is_staff"],
+                ),
+                dt.fromtimestamp(data["post_date"], tz=timezone.utc),
+                data["body"],
+            )
+            for data in payload
+        ]
+        return comments
 
     async def search_query(
         self, query: str, page: int = 1, sort: str = "popular"
@@ -160,7 +162,7 @@ class Doujin:
             date
 
         Some tags don't have certain sortings, for example ahegao doesn't seem
-        to have 'date' nor 'popular-day' when searching via tag name on page 1, but yaoi 
+        to have 'date' nor 'popular-day' when searching via tag name on page 1, but yaoi
         on the other hand has both.
         Traceback "KeyError: 'result'" means it doesn't have that sorting.
         """

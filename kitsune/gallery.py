@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timezone
-from enum import Enum
 
 __all__ = (
     "Title",
@@ -10,6 +9,7 @@ __all__ = (
     "Cover",
     "Thumb" "Gallery",
 )
+
 
 @dataclass(frozen=True, slots=True)
 class User:
