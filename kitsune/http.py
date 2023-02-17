@@ -1,4 +1,6 @@
-from typing import Optional, Union
+import json
+from typing import Optional
+from typing import Union
 
 import aiohttp
 
@@ -6,7 +8,7 @@ import aiohttp
 class HTTP:
     async def fetch(
         self, session: aiohttp.ClientSession, url: str, json: Optional[bool] = True
-    ):
+    ) -> Union[dict, bytes]:
         # does the get requests
         async with session.get(url) as response:
             if json:
@@ -33,3 +35,10 @@ class HTTP:
         # cloudflare skip any% speedrun
         main = f"https://nhentai-net.translate.goog/{url}&_x_tr_sl=vi&_x_tr_tl=en&_x_tr_hl=vi&_x_tr_pto=wapp"
         return await self.fetch(session, main)
+
+    async def write_json(self, payload: dict) -> None:
+        """
+        Write the json payload to local directory as __id.json
+        """
+        with open(f"{payload['id']}.json", "w", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False, indent=2))

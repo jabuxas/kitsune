@@ -33,7 +33,7 @@ class Doujin:
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.session.close()
 
-    async def fetch_gallery(self, __id: int, session=None) -> Gallery:
+    async def fetch_gallery(self, __id: int, write=False) -> Gallery:
         """
         Standard fetching of the gallery, it receives as argument
         an integer, and returns a gallery object
@@ -42,11 +42,14 @@ class Doujin:
         if gallery := self.cache.get(__id):
             return gallery
 
-        if session is None:
-            session = self.session
+        session = self.session
 
         # fetch payload
         payload = await HTTP().gallery(session, __id)
+
+        if write:
+            await HTTP().write_json(payload)
+
         gallery = Gallery(payload)
         # add payload to cache
         self.cache[gallery.id] = gallery
@@ -58,8 +61,7 @@ class Doujin:
         Receives a list of doujin's id's as argument,
         returns a list with the gallery objects of those id's
         """
-        session = self.session
-        tasks = (self.fetch_gallery(__id, session) for __id in ids)
+        tasks = (self.fetch_gallery(__id) for __id in ids)
         results = await asyncio.gather(*tasks)
         return results
 
@@ -78,7 +80,7 @@ class Doujin:
 
         return galleries
 
-    async def download(self, location: str, __id: int):
+    async def download(self, location: str, __id: int) -> None:
         """
         Download the doujin pages to the specified location.
         Accepts the absolute path as location. e.g:
