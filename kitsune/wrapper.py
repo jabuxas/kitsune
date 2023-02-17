@@ -9,34 +9,46 @@ from typing import Optional
 import aiohttp
 from tqdm import tqdm
 
-from kitsune.gallery import Comment
-from kitsune.gallery import Gallery
-from kitsune.gallery import User
+from kitsune.gallery import Comment, Gallery, User
 from kitsune.http import HTTP
 
 __all__ = ("Doujin",)
 
 
 class Doujin:
+    """
+    Main wrapper class.
+
+    Has various methods such as fetching, parsing downloading and searching for doujins.
+    """
+
     def __init__(
         self,
         session: Optional[aiohttp.ClientSession] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
+        """
+        Init method of the main class.
+
+        Accepts passing of your own aiohttp session, and async event loop.
+        """
         self.cache: dict[int, Gallery] = {}
         self.loop = loop or asyncio.get_event_loop()
         self.session = session or aiohttp.ClientSession(loop=self.loop)
 
     async def __aenter__(self):
+        """Async context manager enter method."""
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
+        """Async context manager exit method."""
         await self.session.close()
 
     async def fetch_gallery(self, __id: int, write=False) -> Gallery:
         """
-        Standard fetching of the gallery, it receives as argument
-        an integer, and returns a gallery object
+        Fetch gallery, it receives as argument an integer, and returns a gallery object.
+
+        It is possible to pass write=True so that it saves the json payload to current directory.
         """
         # if gallery is in cache, use that
         if gallery := self.cache.get(__id):
@@ -58,8 +70,9 @@ class Doujin:
 
     async def fetch_galleries(self, ids: list) -> list[Gallery]:
         """
-        Receives a list of doujin's id's as argument,
-        returns a list with the gallery objects of those id's
+        Retrieve multiple galleries at the same time.
+
+        Accepts a list of int ids of doujins.
         """
         tasks = (self.fetch_gallery(__id) for __id in ids)
         results = await asyncio.gather(*tasks)
@@ -67,8 +80,9 @@ class Doujin:
 
     async def fetch_related(self, __id: int) -> list[Gallery]:
         """
-        Parses all related doujin to the id specified,
-        returning a list with the objects of each
+        Parse all related doujin to the id specified.
+
+        Returns a list with Gallery objects.
         """
         session = self.session
         url = f"{__id}/related"
@@ -83,6 +97,7 @@ class Doujin:
     async def download(self, location: str, __id: int) -> None:
         """
         Download the doujin pages to the specified location.
+
         Accepts the absolute path as location. e.g:
             '/home/user/tmp'
         without trailing slashes.
@@ -111,10 +126,7 @@ class Doujin:
                 executor.submit(HTTP.write_file, location, count, link, image)
 
     async def comments(self, __id) -> list[Comment]:
-        """
-        Retrieves the comments from a Doujin and their
-        metadata, such as their id, user picture url, etc.
-        """
+        """Retrieve the comments from a Doujin and their metadata, such as their id, user picture url, etc."""
         session = self.session
         url = f"{__id}/comments"
         payload = await HTTP().gallery(session, url)
@@ -140,7 +152,7 @@ class Doujin:
         self, query: str, page: int = 1, sort: str = "popular"
     ) -> list[Gallery]:
         """
-        Searches by query, defaults to page 1 and popular sorting.
+        Search by query, defaults to page 1 and popular sorting.
 
         Let's say you want to search for doujins that have the
         ahegao tag, on page 3, sorting by week popular.
@@ -178,7 +190,7 @@ class Doujin:
         self, tag_id: int, page: int = 1, sort: str = "popular"
     ) -> list[Gallery]:
         """
-        Searches by tag, defaults to page 1 and popular sorting.
+        Search by tag, defaults to page 1 and popular sorting.
 
         Let's say you want to search for doujins that have the
         ahegao tag (id 13989), on page 1, sorting by month popular.
