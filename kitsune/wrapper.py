@@ -4,12 +4,15 @@ import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
 from datetime import timezone
-from typing import Dict, List
+from typing import Dict
+from typing import List
 
 import aiohttp
 from tqdm import tqdm
 
-from kitsune.gallery import Comment, Gallery, User
+from kitsune.gallery import Comment
+from kitsune.gallery import Gallery
+from kitsune.gallery import User
 from kitsune.http import HTTP
 
 __all__ = ("Doujin",)
@@ -131,21 +134,75 @@ class Doujin:
         )
         return [comment(data) for data in payload]
 
-    async def search_query(self, params: dict) -> list[Gallery]:
+    async def search_query(
+        self, query: str, page: int = 1, sort: str = "popular"
+    ) -> list[Gallery]:
         """
-        Searches by query, accepts payload in the following params:
+        Searches by query, defaults to page 1 and popular sorting.
 
-            param = {"query": "tag: demon_girl", "page": 1, "sort": "popular"}
+        Let's say you want to search for doujins that have the
+        ahegao tag, on page 3, sorting by week popular.
+
+        You can do:
+
+        async def main()
+            async with kitsune.Doujin() as doujin:
+                search = await doujin.search_query("tag:ahegao", 3, "popular-week")
+                print(search)
+
+        asyncio.run(main())
+
+        Sorting accepts:
+            popular
+            popular-month
+            popular-week
+            popular-day
+            date
+
+        Some tags don't have certain sortings, for example ahegao doesn't seem
+        to have 'date' nor 'popular-day' when searching via tag name on page 1, but yaoi 
+        on the other hand has both.
+        Traceback "KeyError: 'result'" means it doesn't have that sorting.
         """
         session = self.session
+        params = {"query": {query}, "page": page, "sort": sort}
         base_url = f"api/galleries/search"
         url = f"{base_url}?{urllib.parse.urlencode(params)}"
         payload = await HTTP().google(session, url)
         payload = payload["result"]
         return [Gallery(data) for data in payload]
 
-    async def search_tags(self, params: dict) -> list[Gallery]:
+    async def search_tags(
+        self, tag_id: int, page: int = 1, sort: str = "popular"
+    ) -> list[Gallery]:
+        """
+        Searches by tag, defaults to page 1 and popular sorting.
+
+        Let's say you want to search for doujins that have the
+        ahegao tag (id 13989), on page 1, sorting by month popular.
+
+        You can do:
+
+        async def main()
+            async with kitsune.Doujin() as doujin:
+                search = await doujin.search_tags(query=13989, sort="popular-month")
+                print(search)
+
+        asyncio.run(main())
+
+        Sorting accepts:
+            popular
+            popular-month
+            popular-week
+            popular-day (technically, but I haven't found any doujin that has this)
+            date
+
+        Some tags have weird behaviour, for example ahegao doesn't seem
+        to have 'date' when searching via tag name, but with tag_id on the other hand it does.
+        Traceback "KeyError: 'result'" means it doesn't have that sorting.
+        """
         session = self.session
+        params = {"tag_id": tag_id, "page": page, "sort": sort}
         base_url = f"api/galleries/tagged"
         url = f"{base_url}?{urllib.parse.urlencode(params)}"
         payload = await HTTP().google(session, url)
