@@ -4,8 +4,6 @@ import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
 from datetime import timezone
-from typing import Dict
-from typing import List
 
 import aiohttp
 from tqdm import tqdm
@@ -24,7 +22,7 @@ class Doujin:
         session=None,
         loop=None,
     ):
-        self.cache: Dict[int, Gallery] = {}
+        self.cache: dict[int, Gallery] = {}
         self.loop = loop or asyncio.get_event_loop()
         self.session = session or aiohttp.ClientSession(loop=self.loop)
 
@@ -64,7 +62,7 @@ class Doujin:
         results = await asyncio.gather(*tasks)
         return results
 
-    async def fetch_related(self, __id: int) -> List[Gallery]:
+    async def fetch_related(self, __id: int) -> list[Gallery]:
         """
         Parses all related doujin to the id specified,
         returning a list with the objects of each
