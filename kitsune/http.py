@@ -26,7 +26,8 @@ class HTTP:
         # get request
         return await self.fetch(session, url)
 
-    def write_file(self, location: str, count: int, link: str, image: bytes) -> None:
+    @staticmethod
+    def write_file(location: str, count: int, link: str, image: bytes) -> None:
         filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
         with open(f"{filename}", mode="wb") as f:
             f.write(image)
@@ -36,7 +37,8 @@ class HTTP:
         main = f"https://nhentai-net.translate.goog/{url}&_x_tr_sl=vi&_x_tr_tl=en&_x_tr_hl=vi&_x_tr_pto=wapp"
         return await self.fetch(session, main)
 
-    async def write_json(self, payload: dict) -> None:
+    @staticmethod
+    def write_json(payload: dict) -> None:
         """
         Write the json payload to local directory as __id.json
         """

@@ -48,7 +48,7 @@ class Doujin:
         payload = await HTTP().gallery(session, __id)
 
         if write:
-            await HTTP().write_json(payload)
+            HTTP.write_json(payload)
 
         gallery = Gallery(payload)
         # add payload to cache
@@ -108,7 +108,7 @@ class Doujin:
                     print(f"File {filename} already exists, skipping download.")
                     continue
                 image = await HTTP().fetch(session, link, json=False)
-                executor.submit(HTTP().write_file, location, count, link, image)
+                executor.submit(HTTP.write_file, location, count, link, image)
 
     async def comments(self, __id) -> list[Comment]:
         """
