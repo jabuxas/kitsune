@@ -4,6 +4,7 @@ import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
 from datetime import timezone
+from typing import Optional
 
 import aiohttp
 from tqdm import tqdm
@@ -19,8 +20,8 @@ __all__ = ("Doujin",)
 class Doujin:
     def __init__(
         self,
-        session=None,
-        loop=None,
+        session: Optional[aiohttp.ClientSession] = None,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
         self.cache: dict[int, Gallery] = {}
         self.loop = loop or asyncio.get_event_loop()
