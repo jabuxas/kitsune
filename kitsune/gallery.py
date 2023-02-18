@@ -12,29 +12,6 @@ __all__ = (
 
 
 @dataclass(frozen=True, slots=True)
-class User:
-    """User parsing class."""
-
-    id: int
-    username: str
-    slug: str
-    avatar_url: str
-    is_superuser: bool
-    is_staff: bool
-
-
-@dataclass(frozen=True, slots=True)
-class Comment:
-    """Comments parsing class."""
-
-    id: int
-    gallery_id: int
-    poster: User
-    post_date: dt
-    body: str
-
-
-@dataclass(frozen=True, slots=True)
 class Title:
     """Title parsing class."""
 
@@ -183,11 +160,3 @@ class Gallery:
     def num_favorites(self) -> int:
         """Returns the numbers of favorites a doujin has."""
         return self.payload["num_favorites"]
-
-
-@dataclass(frozen=True, slots=True)
-class Homepage:
-    """Homepage parsing class."""
-
-    trending_new: list[Gallery]
-    new: list[Gallery]

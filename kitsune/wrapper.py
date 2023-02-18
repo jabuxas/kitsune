@@ -9,7 +9,8 @@ from typing import Optional
 import aiohttp
 from tqdm import tqdm
 
-from kitsune.gallery import Comment, Gallery, Homepage, User
+from kitsune.external import *
+from kitsune.gallery import *
 from kitsune.http import HTTP
 
 __all__ = ("Doujin",)

@@ -8,7 +8,7 @@ from kitsune.gallery import Gallery
 
 
 class HTTP:
-    """Main GET'ing class."""
+    """Main fetching class."""
 
     async def fetch(
         self, session: aiohttp.ClientSession, url: str
