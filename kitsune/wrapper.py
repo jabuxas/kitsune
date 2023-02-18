@@ -1,5 +1,7 @@
 import asyncio
+from bs4 import BeautifulSoup
 import pathlib
+import re
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
@@ -170,13 +172,8 @@ class Doujin:
             popular
             popular-month
             popular-week
-            popular-day
+            popular-today
             date
-
-        Some tags don't have certain sortings, for example ahegao doesn't seem
-        to have 'date' nor 'popular-day' when searching via tag name on page 1, but yaoi
-        on the other hand has both.
-        Traceback "KeyError: 'result'" means it doesn't have that sorting.
         """
         session = self.session
         params = {"query": {query}, "page": page, "sort": sort}
@@ -208,12 +205,8 @@ class Doujin:
             popular
             popular-month
             popular-week
-            popular-day (technically, but I haven't found any doujin that has this)
+            popular-today
             date
-
-        Some tags have weird behaviour, for example ahegao doesn't seem
-        to have 'date' when searching via tag name, but with tag_id on the other hand it does.
-        Traceback "KeyError: 'result'" means it doesn't have that sorting.
         """
         session = self.session
         params = {"tag_id": tag_id, "page": page, "sort": sort}
@@ -222,3 +215,14 @@ class Doujin:
         payload = await HTTP().google(session, url)
         payload = payload["result"]
         return [Gallery(data) for data in payload]
+
+    async def get_homepage(self):
+        session = self.session
+        base = "https://nhentai.net/"
+        translate = f"https://translate.google.com/translate?sl=vi&tl=en&hl=vi&u={base}&client=webapp"
+        payload = await HTTP().fetch(session, translate, json=False)
+        soup = BeautifulSoup(payload, 'html.parser')
+        titles = [div.text for div in soup.find_all('div', class_='caption')][:5]
+
+        popular_now = {doujin for doujin in await self.search_query(query='*', sort='popular-today') if doujin in titles}
+        return popular_now
