@@ -95,7 +95,7 @@ class Gallery:
 
     EXTENSIONS = {"j": "jpg", "p": "png", "g": "gif"}
 
-    def __init__(self, payload):
+    def __init__(self, payload: dict):
         self.payload = payload
 
     def __getitem__(self, key):
@@ -183,3 +183,11 @@ class Gallery:
     def num_favorites(self) -> int:
         """Returns the numbers of favorites a doujin has."""
         return self.payload["num_favorites"]
+
+
+@dataclass(frozen=True, slots=True)
+class Homepage:
+    """Homepage parsing class."""
+
+    trending_new: list[Gallery]
+    new: list[Gallery]

@@ -1,33 +1,35 @@
 import json
-from typing import Optional, Union
+from typing import Union
 
 import aiohttp
+from bs4 import BeautifulSoup
+
+from kitsune.gallery import Gallery
 
 
 class HTTP:
     """Main GET'ing class."""
 
     async def fetch(
-
-        self, session: aiohttp.ClientSession, url: str, json: Optional[bool] = True
-    ) -> Union[dict, bytes]:
+        self, session: aiohttp.ClientSession, url: str
+    ) -> Union[dict, bytes, str]:
         """Get requests.
 
         The json argument decides whether to parse the payload or receive it as bytes.
         """
         # does the get requests
         async with session.get(url) as response:
-            if json:
+            if "application/json" in response.headers.get("Content-Type"):
                 return await response.json()
+            elif "text/html" in response.headers.get("Content-Type"):
+                return await response.text()
             else:
                 return await response.read()
 
-    async def gallery(
-        self, session: aiohttp.ClientSession, __id: Union[int, str]
-    ) -> dict:
+    async def gallery(self, session: aiohttp.ClientSession, url: str) -> dict:
         """Class method used by normal requests that aren't queries."""
         # formats the urls for the get requests
-        url = f"https://nhentai.net/api/gallery/{__id}"
+        url = f"https://nhentai.net/{url}"
         url = f"https://translate.google.com/translate?sl=vi&tl=en&hl=vi&u={url}&client=webapp"
 
         # get request
@@ -51,3 +53,8 @@ class HTTP:
         """Write the json payload to local directory as __id.json."""
         with open(f"{payload['id']}.json", "w", encoding="utf-8") as f:
             f.write(json.dumps(payload, ensure_ascii=False, indent=2))
+
+    async def get_popular(self, session) -> set[Gallery]:
+        payload = await self.gallery(session, "")
+        soup = BeautifulSoup(payload, "html.parser")
+        return [div.text.strip() for div in soup.find_all("div", class_="caption")][:5]

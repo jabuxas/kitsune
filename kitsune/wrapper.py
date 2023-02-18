@@ -1,7 +1,5 @@
 import asyncio
-from bs4 import BeautifulSoup
 import pathlib
-import re
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime as dt
@@ -11,7 +9,7 @@ from typing import Optional
 import aiohttp
 from tqdm import tqdm
 
-from kitsune.gallery import Comment, Gallery, User
+from kitsune.gallery import Comment, Gallery, Homepage, User
 from kitsune.http import HTTP
 
 __all__ = ("Doujin",)
@@ -59,7 +57,8 @@ class Doujin:
         session = self.session
 
         # fetch payload
-        payload = await HTTP().gallery(session, __id)
+        url = f"api/gallery/{__id}"
+        payload = await HTTP().gallery(session, url)
 
         if write:
             HTTP.write_json(payload)
@@ -87,7 +86,7 @@ class Doujin:
         Returns a list with Gallery objects.
         """
         session = self.session
-        url = f"{__id}/related"
+        url = f"api/gallery/{__id}/related"
         payload = await HTTP().gallery(session, url)
         galleries = [Gallery(result) for result in payload["result"]]
 
@@ -124,13 +123,13 @@ class Doujin:
                 if pathlib.Path(filename).exists():
                     print(f"File {filename} already exists, skipping download.")
                     continue
-                image = await HTTP().fetch(session, link, json=False)
+                image = await HTTP().fetch(session, link)
                 executor.submit(HTTP.write_file, location, count, link, image)
 
     async def comments(self, __id) -> list[Comment]:
         """Retrieve the comments from a Doujin and their metadata, such as their id, user picture url, etc."""
         session = self.session
-        url = f"{__id}/comments"
+        url = f"api/gallery/{__id}/comments"
         payload = await HTTP().gallery(session, url)
         return [
             Comment(
@@ -216,13 +215,12 @@ class Doujin:
         payload = payload["result"]
         return [Gallery(data) for data in payload]
 
-    async def get_homepage(self):
+    async def get_homepage(self) -> Homepage:
         session = self.session
-        base = "https://nhentai.net/"
-        translate = f"https://translate.google.com/translate?sl=vi&tl=en&hl=vi&u={base}&client=webapp"
-        payload = await HTTP().fetch(session, translate, json=False)
-        soup = BeautifulSoup(payload, 'html.parser')
-        titles = [div.text for div in soup.find_all('div', class_='caption')][:5]
-
-        popular_now = {doujin for doujin in await self.search_query(query='*', sort='popular-today') if doujin in titles}
-        return popular_now
+        doujins = await self.search_query(query="*", sort="popular-today")
+        titles = await HTTP().get_popular(session)
+        popular = [doujin for doujin in doujins if doujin.title.english in titles]
+        homepage = "api/galleries/all?page=1"
+        homepage_fetch = await HTTP().gallery(session, homepage)
+        home = [Gallery(data) for data in homepage_fetch["result"]]
+        return Homepage(popular, home)
