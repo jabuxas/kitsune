@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime as dt
+
 from kitsune.gallery import Gallery
 
 
@@ -23,6 +25,7 @@ class Comment:
     poster: User
     post_date: dt
     body: str
+
 
 @dataclass(frozen=True, slots=True)
 class Homepage:
