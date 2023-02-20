@@ -7,7 +7,6 @@ __all__ = (
     "Tag",
     "Page",
     "Cover",
-    "Thumb" "Gallery",
 )
 
 

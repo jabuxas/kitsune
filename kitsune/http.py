@@ -19,9 +19,12 @@ class HTTP:
         """
         # does the get requests
         async with session.get(url) as response:
-            if "application/json" in response.headers.get("Content-Type"):
+            if response.status == 429:
+                return "rate limited :)"
+            content_type = response.headers["Content-Type"]
+            if content_type == "application/json":
                 return await response.json()
-            elif "text/html" in response.headers.get("Content-Type"):
+            elif content_type == "application/json":
                 return await response.text()
             else:
                 return await response.read()
