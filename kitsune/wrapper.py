@@ -77,8 +77,7 @@ class Doujin:
         Accepts a list of int ids of doujins.
         """
         tasks = (self.fetch_gallery(__id) for __id in ids)
-        results = await asyncio.gather(*tasks)
-        return results
+        return await asyncio.gather(*tasks)
 
     async def fetch_related(self, __id: int) -> list[Gallery]:
         """
@@ -129,6 +128,18 @@ class Doujin:
             for task, loc in tasks:
                 image = await task
                 executor.submit(HTTP.write_file, loc, image)
+
+    async def download_multiple(self, location: str, ids: list[int]) -> list[None]:
+        """
+        Downloads multiple doujins from main downloads function.
+
+        Accepts location in the same way download() does:
+            '/home/user/downloads' without trailing slashes.
+
+        Accepts also an integer list with the ids of the doujins to be downloaded.
+        """
+        tasks = [asyncio.create_task(self.download(location, i)) for i in ids]
+        return await asyncio.gather(*tasks)
 
     async def comments(self, __id) -> list[Comment]:
         """Retrieve the comments from a Doujin and their metadata, such as their id, user picture url, etc."""
@@ -220,6 +231,11 @@ class Doujin:
         return [Gallery(data) for data in payload]
 
     async def get_homepage(self) -> Homepage:
+        """
+        Fetch the nhentai homepage for the day.
+
+        Retrieves a total of 30 doujins, being 5 the "Trending" and the other 25 new releases.
+        """
         session = self.session
         doujins = await self.search_query(query="*", sort="popular-today")
         titles = await HTTP().get_popular(session)
@@ -228,4 +244,3 @@ class Doujin:
         homepage_fetch = await HTTP().gallery(session, homepage)
         home = [Gallery(data) for data in homepage_fetch["result"]]
         return Homepage(popular, home)
-

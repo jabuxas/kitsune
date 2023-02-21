@@ -53,7 +53,7 @@ class HTTP:
         with open(f"{payload['id']}.json", "w", encoding="utf-8") as f:
             f.write(json.dumps(payload, ensure_ascii=False, indent=2))
 
-    async def get_popular(self, session) -> set[Gallery]:
+    async def get_popular(self, session) -> list[Gallery]:
         payload = await self.gallery(session, "")
         soup = BeautifulSoup(payload, "html.parser")
         return [div.text.strip() for div in soup.find_all("div", class_="caption")][:5]
