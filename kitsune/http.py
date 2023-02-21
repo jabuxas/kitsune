@@ -13,10 +13,7 @@ class HTTP:
     async def fetch(
         self, session: aiohttp.ClientSession, url: str
     ) -> Union[dict, bytes, str]:
-        """Get requests.
-
-        The json argument decides whether to parse the payload or receive it as bytes.
-        """
+        """GET requests."""
         # does the get requests
         async with session.get(url) as response:
             if response.status == 429:
@@ -24,7 +21,7 @@ class HTTP:
             content_type = response.headers["Content-Type"]
             if content_type == "application/json":
                 return await response.json()
-            elif content_type == "application/json":
+            elif content_type == "text/html":
                 return await response.text()
             else:
                 return await response.read()
@@ -39,9 +36,8 @@ class HTTP:
         return await self.fetch(session, url)
 
     @staticmethod
-    def write_file(location: str, count: int, link: str, image: bytes) -> None:
+    def write_file(filename: str, image: bytes) -> None:
         """Write bytes to a file."""
-        filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
         with open(f"{filename}", mode="wb") as f:
             f.write(image)
 

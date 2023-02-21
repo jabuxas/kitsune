@@ -106,26 +106,29 @@ class Doujin:
 
         Accepts an int id as the __id.
         """
-        count = 0
         location = f"{location}/{__id}"
         # The below just checks if the folders exists
         if not pathlib.Path(location).exists():
             pathlib.Path(location).mkdir()
         # await payload
-        links = await self.fetch_gallery(__id)
+        gallery = await self.fetch_gallery(__id)
         session = self.session
+        tasks = []
         with ThreadPoolExecutor() as executor:
-            for link in tqdm(links.pages, desc="Downloading", ascii=True):
-                # link is a tuple with metadata and url
-                link = link[1]
-                count += 1
+            for pages, link in gallery.pages:
+                ext = pages.type
+                num = pages.num
                 # below checks if the files exists
-                filename = f"{location}/{str(count).zfill(4)}.{link[-3:]}"
+                filename = f"{location}/{str(num).zfill(4)}.{ext}"
                 if pathlib.Path(filename).exists():
                     print(f"File {filename} already exists, skipping download.")
                     continue
-                image = await HTTP().fetch(session, link)
-                executor.submit(HTTP.write_file, location, count, link, image)
+                task = asyncio.create_task(HTTP().fetch(session, link))
+                tasks.append((task, filename))
+
+            for task, loc in tasks:
+                image = await task
+                executor.submit(HTTP.write_file, loc, image)
 
     async def comments(self, __id) -> list[Comment]:
         """Retrieve the comments from a Doujin and their metadata, such as their id, user picture url, etc."""
@@ -225,3 +228,4 @@ class Doujin:
         homepage_fetch = await HTTP().gallery(session, homepage)
         home = [Gallery(data) for data in homepage_fetch["result"]]
         return Homepage(popular, home)
+
