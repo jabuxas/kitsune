@@ -228,7 +228,7 @@ class Doujin:
         Retrieves a total of 30 doujins, being 5 the "Trending" and the other 25 new releases.
         """
         session = self.session
-        doujins = await self.search_query(query="*", sort="popular-today")
+        doujins = await self.search_query(query="*", sort=Sort.POPULAR_TODAY)
         titles = await HTTP().get_popular(session)
         popular = [doujin for doujin in doujins if doujin.title.english in titles]
         homepage = "api/galleries/all?page=1"
