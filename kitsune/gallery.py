@@ -2,13 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime as dt
 from datetime import timezone
 
-__all__ = (
-    "Title",
-    "Tag",
-    "Page",
-    "Cover",
-)
-
 
 @dataclass(frozen=True, slots=True)
 class Title:
@@ -38,14 +31,14 @@ class Page:
         return getattr(self, key)
 
     media_id: int
-    num: int
-    type: str
+    page_num: int
+    extension_type: str
     resolution: tuple[int, int]
 
     @property
     def url(self) -> str:
         """Create page url for specified page."""
-        return f"https://i.nhentai.net/galleries/{self.media_id}/{self.num}.{self.type}"
+        return f"https://i.nhentai.net/galleries/{self.media_id}/{self.page_num}.{self.extension_type}"
 
 
 class Cover(Page):
@@ -54,7 +47,7 @@ class Cover(Page):
     @property
     def url(self) -> str:
         """Create cover url."""
-        return f"https://t.nhentai.net/galleries/{self.media_id}/cover.{self.type}"
+        return f"https://t.nhentai.net/galleries/{self.media_id}/cover.{self.extension_type}"
 
 
 class Thumb(Page):
@@ -63,7 +56,7 @@ class Thumb(Page):
     @property
     def url(self) -> str:
         """Create thumbnail url."""
-        return f"https://t.nhentai.net/galleries/{self.media_id}/thumb.{self.type}"
+        return f"https://t.nhentai.net/galleries/{self.media_id}/thumb.{self.extension_type}"
 
 
 class Gallery:

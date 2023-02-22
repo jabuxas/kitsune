@@ -10,11 +10,11 @@ from kitsune.gallery import Gallery
 class HTTP:
     """Main fetching class."""
 
+    @staticmethod
     async def fetch(
-        self, session: aiohttp.ClientSession, url: str
+        session: aiohttp.ClientSession, url: str
     ) -> Union[dict, bytes, str]:
         """GET requests."""
-        # does the get requests
         async with session.get(url) as response:
             if response.status == 429:
                 return "rate limited :)"

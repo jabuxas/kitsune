@@ -1,7 +1,18 @@
 from dataclasses import dataclass
 from datetime import datetime as dt
+from enum import Enum
 
 from kitsune.gallery import Gallery
+
+
+class Sort(Enum):
+    """Sort doujin query params."""
+
+    POPULAR = "popular"
+    POPULAR_MONTH = "popular-month"
+    POPULAR_WEEK = "popular-week"
+    POPULAR_TODAY = "popular-today"
+    DATE = "date"
 
 
 @dataclass(frozen=True, slots=True)

@@ -7,13 +7,10 @@ from datetime import timezone
 from typing import Optional
 
 import aiohttp
-from tqdm import tqdm
 
 from kitsune.external import *
 from kitsune.gallery import *
 from kitsune.http import HTTP
-
-__all__ = ("Doujin",)
 
 
 class Doujin:
@@ -115,14 +112,14 @@ class Doujin:
         tasks = []
         with ThreadPoolExecutor() as executor:
             for pages, link in gallery.pages:
-                ext = pages.type
-                num = pages.num
+                ext = pages.extension_type
+                num = pages.page_num
                 # below checks if the files exists
                 filename = f"{location}/{str(num).zfill(4)}.{ext}"
                 if pathlib.Path(filename).exists():
                     print(f"File {filename} already exists, skipping download.")
                     continue
-                task = asyncio.create_task(HTTP().fetch(session, link))
+                task = asyncio.create_task(HTTP.fetch(session, link))
                 tasks.append((task, filename))
 
             for task, loc in tasks:
@@ -165,7 +162,7 @@ class Doujin:
         ]
 
     async def search_query(
-        self, query: str, page: int = 1, sort: str = "popular"
+        self, query: str, page: int = 1, sort: Sort = Sort.POPULAR
     ) -> list[Gallery]:
         """
         Search by query, defaults to page 1 and popular sorting.
@@ -175,19 +172,16 @@ class Doujin:
 
         You can do:
 
+        from kitsune import Doujin, Sort
+
         async def main()
-            async with kitsune.Doujin() as doujin:
-                search = await doujin.search_query("tag:ahegao", 3, "popular-week")
+            async with Doujin() as doujin:
+                search = await doujin.search_query("tag:ahegao", 3, Sort.POPULAR_WEEK)
                 print(search)
 
         asyncio.run(main())
 
-        Sorting accepts:
-            popular
-            popular-month
-            popular-week
-            popular-today
-            date
+        Sorting accepts all enums from Sort class.
         """
         session = self.session
         params = {"query": {query}, "page": page, "sort": sort}
@@ -198,7 +192,7 @@ class Doujin:
         return [Gallery(data) for data in payload]
 
     async def search_tags(
-        self, tag_id: int, page: int = 1, sort: str = "popular"
+        self, tag_id: int, page: int = 1, sort: Sort = Sort.POPULAR
     ) -> list[Gallery]:
         """
         Search by tag, defaults to page 1 and popular sorting.
@@ -208,19 +202,16 @@ class Doujin:
 
         You can do:
 
+        from kitsune import Doujin, Sort
+
         async def main()
-            async with kitsune.Doujin() as doujin:
-                search = await doujin.search_tags(query=13989, sort="popular-month")
+            async with Doujin() as doujin:
+                search = await doujin.search_tags(query=13989, sort=Sort.POPULAR_MONTH)
                 print(search)
 
         asyncio.run(main())
 
-        Sorting accepts:
-            popular
-            popular-month
-            popular-week
-            popular-today
-            date
+        Sorting accepts all enums from Sort class.
         """
         session = self.session
         params = {"tag_id": tag_id, "page": page, "sort": sort}
