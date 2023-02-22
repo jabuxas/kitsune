@@ -128,7 +128,7 @@ class Doujin:
 
     async def download_multiple(self, location: str, ids: list[int]) -> list[None]:
         """
-        Downloads multiple doujins from main downloads function.
+        Download multiple doujins from main downloads function.
 
         Accepts location in the same way download() does:
             '/home/user/downloads' without trailing slashes.
