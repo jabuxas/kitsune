@@ -67,7 +67,7 @@ class Doujin:
 
         return gallery
 
-    async def fetch_galleries(self, ids: list) -> list[Gallery]:
+    async def fetch_galleries(self, ids: list[int]) -> list[Gallery]:
         """
         Retrieve multiple galleries at the same time.
 
