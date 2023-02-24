@@ -17,7 +17,7 @@ class Doujin:
     """
     Main wrapper class.
 
-    Has various methods such as fetching, parsing downloading and searching for doujins.
+    Accepts passing of your own ClientSession and your own Event Loop.
     """
 
     def __init__(
@@ -25,11 +25,7 @@ class Doujin:
         session: Optional[aiohttp.ClientSession] = None,
         loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
-        """
-        Init method of the main class.
-
-        Accepts passing of your own aiohttp session, and async event loop.
-        """
+        """Init method of the main class."""
         self.cache: dict[int, Gallery] = {}
         self.loop = loop or asyncio.get_event_loop()
         self.session = session or aiohttp.ClientSession(loop=self.loop)
@@ -44,9 +40,9 @@ class Doujin:
 
     async def fetch_gallery(self, __id: int, write=False) -> Gallery:
         """
-        Fetch gallery, it receives as argument an integer, and returns a gallery object.
+        Receives as argument an integer, and returns a gallery object.
 
-        It is possible to pass write=True so that it saves the json payload to current directory.
+        Pass write=True flag to the function and it'll save the json payload to current directory.
         """
         # if gallery is in cache, use that
         if gallery := self.cache.get(__id):
@@ -96,11 +92,9 @@ class Doujin:
         """
         Download the doujin pages to the specified location.
 
-        Accepts the absolute path as location. e.g:
-            '/home/user/tmp'
-        without trailing slashes.
+        Accepts the absolute path as location without trailing slashes.
 
-        Accepts an int id as the __id.
+        Accepts doujin id as int.
         """
         location = f"{location}/{__id}"
         # The below just checks if the folders exists
@@ -128,18 +122,21 @@ class Doujin:
 
     async def download_multiple(self, location: str, ids: list[int]) -> list[None]:
         """
-        Download multiple doujins from main downloads function.
+        Download multiple doujins.
 
-        Accepts location in the same way download() does:
-            '/home/user/downloads' without trailing slashes.
+        Accepts absolute path as location without trailing slashes.
 
-        Accepts also an integer list with the ids of the doujins to be downloaded.
+        Accepts an integer list with the ids of the doujins to be downloaded.
         """
         tasks = [asyncio.create_task(self.download(location, i)) for i in ids]
         return await asyncio.gather(*tasks)
 
     async def comments(self, __id) -> list[Comment]:
-        """Retrieve the comments from a Doujin and their metadata, such as their id, user picture url, etc."""
+        """
+        Retrieve the comments from a Doujin and their metadata.
+
+        Metadata such as time of posting, id, user stats, user image url
+        """
         session = self.session
         url = f"api/gallery/{__id}/comments"
         payload = await HTTP().gallery(session, url)
@@ -167,20 +164,6 @@ class Doujin:
         """
         Search by query, defaults to page 1 and popular sorting.
 
-        Let's say you want to search for doujins that have the
-        ahegao tag, on page 3, sorting by week popular.
-
-        You can do:
-
-        from kitsune import Doujin, Sort
-
-        async def main()
-            async with Doujin() as doujin:
-                search = await doujin.search_query("tag:ahegao", 3, Sort.POPULAR_WEEK)
-                print(search)
-
-        asyncio.run(main())
-
         Sorting accepts all enums from Sort class.
         """
         session = self.session
@@ -196,20 +179,6 @@ class Doujin:
     ) -> list[Gallery]:
         """
         Search by tag, defaults to page 1 and popular sorting.
-
-        Let's say you want to search for doujins that have the
-        ahegao tag (id 13989), on page 1, sorting by month popular.
-
-        You can do:
-
-        from kitsune import Doujin, Sort
-
-        async def main()
-            async with Doujin() as doujin:
-                search = await doujin.search_tags(query=13989, sort=Sort.POPULAR_MONTH)
-                print(search)
-
-        asyncio.run(main())
 
         Sorting accepts all enums from Sort class.
         """
